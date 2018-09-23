@@ -1,5 +1,8 @@
-class Api::V1::BaseSerializer < ActiveModel::Serializer
+class Api::V1::BaseSerializer
+  include SimpleAMS::DSL
   include Rails.application.routes.url_helpers
+
+  adapter SimpleAMS::Adapters::JSONAPI, root: true
 
   def created_at
     object.created_at.to_datetime.in_time_zone('UTC').iso8601 if object.created_at
