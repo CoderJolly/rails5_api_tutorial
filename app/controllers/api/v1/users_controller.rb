@@ -11,7 +11,9 @@ class Api::V1::UsersController < Api::V1::BaseController
         serializer: Api::V1::UserSerializer,
         fields: auth_users.fields,
         expose: {current_user: current_user},
-        meta: meta_attributes(auth_users.collection)
+        collection: {
+          metas: meta_attributes(auth_users.collection)
+        }
       }).to_json,
     })
   end
@@ -22,6 +24,7 @@ class Api::V1::UsersController < Api::V1::BaseController
     render({
       json: SimpleAMS::Renderer.new(auth_user.record, {
         serializer: Api::V1::UserSerializer,
+        includes: [],
         fields: auth_user.fields,
         expose: {current_user: current_user}
       }).to_json
@@ -37,8 +40,9 @@ class Api::V1::UsersController < Api::V1::BaseController
           serializer: Api::V1::UserSerializer,
           fields: auth_user.fields,
           expose: {current_user: current_user}
-        }).to_json
-      }, status: 201)
+        }).to_json,
+        status: 201
+      })
     else
       invalid_resource!(@user.errors)
     end
@@ -78,8 +82,13 @@ class Api::V1::UsersController < Api::V1::BaseController
     auth_user = authorize_with_permissions(@user, :activate?)
 
     if @user.authenticated?(:activation, params[:token])
-      render jsonapi: auth_user.record, serializer: Api::V1::UserSerializer,
-        fields: {user: auth_user.fields}, status: 200, scope: @user
+      render({
+        json: SimpleAMS::Renderer.new(auth_user.record, {
+          serializer: Api::V1::UserSerializer,
+          fields: auth_user.fields,
+          expose: {current_user: current_user}
+        }).to_json
+      })
     else
       not_found!
     end
